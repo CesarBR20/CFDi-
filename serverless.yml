@@ -1,0 +1,33 @@
+service: nestjs-backend
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1 # Cambia según tu preferencia
+  environment:
+    MONGO_URI: ${ssm:/nestjs-backend/MONGO_URI} # Guardamos la URI de MongoDB en AWS SSM
+    JWT_SECRET: ${ssm:/nestjs-backend/JWT_SECRET} # Guardamos la clave secreta en AWS SSM
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
+
+functions:
+  api:
+    handler: dist/main.handler
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: "{proxy+}"
+          method: ANY
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+
+package:
+  individually: true
+  excludeDevDependencies: true
